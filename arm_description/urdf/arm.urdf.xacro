@@ -333,13 +333,32 @@
     </transmission>
 
 
-    <link name="tool" />
+    <link name="vacuum_gripper">
+        <gravity>0</gravity>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <box size="0.01 0.01 0.01" />
+            </geometry>
+            <material name="transparent">
+                <color rgba="0 0 0 0" />
+            </material>
+        </visual>
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000" />
+            <mass value="0.0001" />
+            <inertia ixx="1e-08" ixy="0" ixz="0" iyy="1e-08" iyz="0" izz="1e-08" />
+        </inertial>
+    </link>
 
 
-    <joint name="link_6-tool" type="fixed">
+    <joint name="gripper_joint" type="revolute">
+        <axis xyz="1 0 0" />
         <parent link="link_6" />
-        <child link="tool" />
+        <child link="vacuum_gripper" />
         <origin xyz="0 0 0" rpy="0 ${DEG2RAD * 90} 0" />
+        <limit effort="50" velocity="50" lower="0" upper="0" />
+        <dynamics damping="0.0" friction="10" />
     </joint>
 
 
@@ -348,6 +367,15 @@
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
             <robotNamespace>/kuka_arm</robotNamespace>
             <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+    </gazebo>
+
+    <!-- Gripper -->
+    <gazebo>
+        <plugin name="gazebo_ros_vacuum_gripper" filename="libgazebo_ros_vacuum_gripper.so">
+            <robotNamespace>/kuka_arm/vacuum_gripper</robotNamespace>
+            <bodyName>vacuum_gripper</bodyName>
+            <topicName>grasping</topicName>
         </plugin>
     </gazebo>
 

@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<launch>
+
+	<arg name="is_using_camera" default="false" />
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="physics" value="ode" /> <!-- ode, bullet, dart or simbody -->
+		<arg name="paused" value="false" />
+		<arg name="verbose" value="false" />
+		<arg name="gui" value="true" />
+	</include>
+
+	<param name="robot_description" command="xacro $(find arm_description)/urdf/arm.urdf.xacro with_camera:=$(arg is_using_camera)" />
+
+	<node name="spawn_robot" pkg="gazebo_ros" type="spawn_model" args="-urdf -model kuka_kr10r1100sixx -param robot_description" />
+
+	<node name="spawn_box" pkg="gazebo_ros" type="spawn_model" args="-urdf -file $(find arm_description)/urdf/box/box.urdf -model 
+ box  -x 0.58 -y 0.0 -z 0.01" respawn="false" output="screen" />
+
+	<!-- Load joint controller configurations from YAML file to parameter server -->
+	<rosparam file="$(find arm_control)/config/arm_control.yaml" command="load" />
+
+	<!-- Load the controllers -->
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/kuka_arm" args="joint_state_controller
+		joint1_position_controller joint2_position_controller joint3_position_controller
+		joint4_position_controller joint5_position_controller joint6_position_controller" />
+
+	<node pkg="arm_control" name="gripper" type="gripper.py" output="screen" />
+
+	<!-- Camera -->
+	<group if="$(arg is_using_camera)">
+		<node pkg="arm_control" name="sensor" type="camera.py" output="screen" />
+	</group>
+
+	<!-- Uncomment the following lines to run rviz -->
+	<!-- <env name="LC_NUMERIC" value="en_US.UTF-8" /> -->
+	<!-- Convert joint states to TF transforms for rviz, etc -->
+	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+		<remap from="/joint_states" to="/kuka_arm/joint_states" />
+	</node> -->
+	<!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+	<!-- <node name="rviz" pkg="rviz" type="rviz" /> -->
+
+</launch>
